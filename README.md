@@ -4,7 +4,9 @@ MacOS script to interact with dark mode.
 ## Features
  - Get current mode
  - Change active mode
- - Listen for theme events and run hook change
+ - Listen for theme events and run a shell script on change
+ - Listen for theme events and change between
+   [chriskempson/base16-shell](https://github.com/chriskempson/base16-shell) themes
 
 ## Installation
 Either run it directly with
@@ -37,19 +39,17 @@ Toogle the theme to the opposite one.
 dark-mode listen <script> [<args>...]
 Listen for theme changes and run the given script.
 The new theme, either "dark" or "light" is passed as the last argument to the script.
+
+dark-mode base16 --root <base16-root> --light <light-theme> --dark <dark-theme>
+Listen for theme changes and change to the base16 theme accordingly
 ```
 
-## Using listen to change terminal theme
-Using [chriskempson/base16-shell](https://github.com/chriskempson/base16-shell) to change the terminal theme,
-one can write a script `set-theme.sh`:
+## Example using listen to change terminal theme
+Using [chriskempson/base16-shell](https://github.com/chriskempson/base16-shell) to change the
+terminal theme, one can use something like
 ```sh
-if [[ "${1}" == "dark" ]]; then
-	bash path/to/base16/scripts/base16-theme-dark.sh
-elif [[ "${1}" == "light" ]]; then
-	bash path/to/base16/scripts/base16-theme-light.sh
-fi
+dark-mode base16 --root "${HOME}/.local/share/base16" --light "ia-light" --dark "ia-dark"
 ```
-And run it with `dark-mode listen bash hook.sh`
 
 ## Credit
 Heavily inspired by:

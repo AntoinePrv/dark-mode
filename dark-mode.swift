@@ -75,6 +75,16 @@ struct DarkMode {
             }
         })
     }
+
+    /* Listen for theme change event and change the Base16 theme. */
+    static func listen_with_base16(root: String, light: String, dark:String) {
+        DarkMode.listen_with({ () -> () in
+            if DarkMode.is_dark() {
+                run_shell(["bash", "\(root)/scripts/base16-\(dark).sh"])
+            } else {
+                run_shell(["bash", "\(root)/scripts/base16-\(light).sh"])
+            }
+        })
     }
 
     private static let set_prefix = """
@@ -105,6 +115,9 @@ func help() -> String {
     \(program_name) listen <script> [<args>...]
     Listen for theme changes and run the given script.
     The new theme, either "dark" or "light" is passed as the last argument to the script.
+
+    \(program_name) base16 --root <base16-root> --light <light-theme> --dark <dark-theme>
+    Listen for theme changes and change to the base16 theme accordingly
     """
 }
 
@@ -112,6 +125,18 @@ func fail_with_help(_ message: String) {
     let argument_error: Int32 = 1
     print_error("\(message)\n\n\(help())")
     exit(argument_error)
+}
+
+/* Find an option in the program arguments or exit with error. */
+func find_option(_ name: String) -> String {
+    let args = CommandLine.arguments
+    if let idx = args.firstIndex(of: name) {
+        if args.count >= idx {
+            return args[idx+1]
+        }
+    }
+    fail_with_help("Please provide argument: \(name).")
+    return ""
 }
 
 func main() {
@@ -135,6 +160,12 @@ func main() {
                 } else {
                     fail_with_help("Provide a hook to run on theme changes.")
                 }
+            case "base16":
+                DarkMode.listen_with_base16(
+                    root: find_option("--root"),
+                    light: find_option("--light"),
+                    dark: find_option("--dark")
+                )
             default:
                 fail_with_help("Invalid command: \(command).")
         }
