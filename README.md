@@ -9,6 +9,7 @@ MacOS script to interact with dark mode.
    [chriskempson/base16-shell](https://github.com/chriskempson/base16-shell) themes
 
 ## Installation
+### Manual
 Either run it directly with
 ```sh
 ./dark-mode.swift <command>
@@ -16,6 +17,14 @@ Either run it directly with
 Or compile it with
 ```sh
 swiftc -o dark-mode dark-mode.swift
+```
+
+### With [Zinit](https://github.com/zdharma/zinit)
+```zsh
+if [[ "$(uname)" == Darwin* ]]; then
+    zinit ice lucid from='gh' atclone='swiftc -o dark-mode dark-mode.swift' atpull="%atclone" sbin='dark-mode'
+    zinit light @AntoinePrv/dark-mode
+fi
 ```
 
 ## Usage
