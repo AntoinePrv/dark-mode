@@ -6,8 +6,23 @@ import Foundation
 /* Run an AppleScript command. */
 @discardableResult
 func run_apple_script(_ source: String) -> String? {
-	NSAppleScript(source: source)?.executeAndReturnError(nil).stringValue
+    NSAppleScript(source: source)?.executeAndReturnError(nil).stringValue
 }
+
+/* Run a shell command. */
+@discardableResult
+func run_shell(_ args: [String]) -> Int32 {
+    let task = Process()
+    task.environment = ProcessInfo.processInfo.environment
+    task.launchPath = "/usr/bin/env"
+    task.arguments = args
+    task.standardError = FileHandle.standardError
+    task.standardOutput = FileHandle.standardOutput
+    task.launch()
+    task.waitUntilExit()
+    return task.terminationStatus
+}
+
 
 /* Print a message to stderr. */
 func print_error(_ message: String) {
@@ -37,35 +52,29 @@ struct DarkMode {
     /* Toogle computer theme. */
     static func toogle() { run_apple_script("\(set_prefix) not dark mode") }
 
-    /* Hook runned by the event listener. */
-    @discardableResult
-    static func hook(_ args: [String]) -> Int32 {
-        let task = Process()
-        task.environment = ProcessInfo.processInfo.environment
-        task.launchPath = "/usr/bin/env"
-        task.arguments = args + [DarkMode.is_dark() ? "dark" : "light"]
-        task.standardError = FileHandle.standardError
-        task.standardOutput = FileHandle.standardOutput
-        task.launch()
-        task.waitUntilExit()
-        return task.terminationStatus
+    /* Listen for theme change and run callback. */
+    static func listen_with(_ callback:@escaping () -> ()) {
+        callback()
+        DistributedNotificationCenter.default.addObserver(
+            forName: Notification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil,
+            queue: nil
+        ) { (notification) -> () in
+            callback()
+        }
+
+        NSApplication.shared.run()
     }
 
-    /* Listen for theme change and run hook. */
-    static func listen(_ args: [String]) {
-        let code = DarkMode.hook(args)
-        if code != 0 {
-            fail_with_message("Error running script: \(args.joined(separator: " "))")
-        } else {
-            DistributedNotificationCenter.default.addObserver(
-                forName: Notification.Name("AppleInterfaceThemeChangedNotification"),
-                object: nil,
-                queue: nil
-            ) { (notification) in
-                DarkMode.hook(args)
+    /* Listen for theme change event and run a shell script. */
+    static func listen_with_shell(_ args: [String]) {
+        DarkMode.listen_with({ () -> () in
+            let code = run_shell(args + [DarkMode.is_dark() ? "dark" : "light"])
+            if code != 0 {
+                fail_with_message("Error running script: \(args.joined(separator: " "))")
             }
-            NSApplication.shared.run()
-        }
+        })
+    }
     }
 
     private static let set_prefix = """
@@ -122,7 +131,7 @@ func main() {
                 DarkMode.toogle()
             case "listen":
                 if args.count >= 3 {
-                    DarkMode.listen(Array(args.suffix(from: 2)))
+                    DarkMode.listen_with_shell(Array(args.suffix(from: 2)))
                 } else {
                     fail_with_help("Provide a hook to run on theme changes.")
                 }
