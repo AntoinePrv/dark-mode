@@ -59,6 +59,23 @@ terminal theme, one can use something like
 ```sh
 dark-mode base16 --root "${HOME}/.local/share/base16" --light "ia-light" --dark "ia-dark"
 ```
+To run the `dark-mode` listener in the background, for instance starting it in `.bashrc`/`.zshrc`,
+you can use
+```bash
+# Only run if using MacOS.
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Don't run withing Tmux or SSH, as it will already be running in the first terminal session.
+    if [["${TERM}" != "screen"* &&  ! -n "${TMUX}" ]] && ! [[ -n "${SSH_CLIENT}" || -n "${SSH_TTY}" ]]; then
+        (
+            # Run dark-mode in the background, removing it from the job list.
+            dark-mode base16 --root "${XDG_DATA_HOME}/base16" --light "one-light" --dark "onedark" &
+            # Kill dark-mode when the shell exits.
+            bash -c "while ps -p $$ 2>&1 1>/dev/null; do sleep 60; done; pkill -P $!" &
+        )
+    fi
+fi
+
+```
 
 ## Credit
 Heavily inspired by:
