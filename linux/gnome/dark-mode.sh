@@ -29,6 +29,8 @@ function dark_mode_toogle() {
 }
 
 function dark_mode_listen() {
+	# Execute a first time to set the theme
+	"$@" "$(dark_mode_get)"
 	gsettings monitor "${setting_name[@]}" | while read line; do
 			case "${line}" in
 				*dark*)
