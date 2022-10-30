@@ -4,10 +4,12 @@ readonly setting_name=("org.gnome.desktop.interface" "color-scheme")
 
 function dark_mode_get() {
 	case "$(gsettings get "${setting_name[@]}")" in
-		*dark*)
-			echo "dark";;
+		*default*)
+			echo "light";;
 		*light*)
 			echo "light";;
+		*dark*)
+			echo "dark";;
 	esac
 }
 
