@@ -37,7 +37,7 @@ function dark_mode_listen() {
 			case "${line}" in
 				*dark*)
 					"$@" "dark";;
-				*light*)
+				*light* | *default*)
 					"$@" "light";;
 			esac
 		done
