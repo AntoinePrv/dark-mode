@@ -31,14 +31,31 @@ function dark_mode_toogle() {
 }
 
 function dark_mode_listen() {
+	local args=()
+	local light="light"
+	local dark="dark"
+	while [[ $# -gt 0 ]]; do
+		case "${1}" in
+			--light)
+				light="${2}"
+				shift 2;;
+			--dark)
+				dark="${2}"
+				shift 2;;
+			*)
+				args+=("${1}")
+				shift;;
+		esac
+	done
+
 	# Execute a first time to set the theme
-	"$@" "$(dark_mode_get)"
+	"${args[@]}" "$(dark_mode_get)"
 	gsettings monitor "${setting_name[@]}" | while read line; do
 			case "${line}" in
 				*dark*)
-					"$@" "dark";;
+					"${args[@]}" "dark";;
 				*light* | *default*)
-					"$@" "light";;
+					"${args[@]}" "light";;
 			esac
 		done
 }

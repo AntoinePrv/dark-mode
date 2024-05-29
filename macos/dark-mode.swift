@@ -67,9 +67,9 @@ struct DarkMode {
     }
 
     /* Listen for theme change event and run a shell script. */
-    static func listen_with_shell(_ args: [String]) {
+    static func listen_with_shell(_ args: [String], light: String, dark: String) {
         DarkMode.listen_with({ () -> () in
-            let code = run_shell(args + [DarkMode.is_dark() ? "dark" : "light"])
+            let code = run_shell(args + [DarkMode.is_dark() ? dark : light])
             if code != 0 {
                 fail_with_message("Error running script: \(args.joined(separator: " "))")
             }
@@ -112,9 +112,9 @@ func help() -> String {
     \(program_name) toogle
     Toogle the theme to the opposite one.
 
-    \(program_name) listen <script> [<args>...]
+    \(program_name) listen --light "str-light" --dark "str-dark "<script> [<args>...]
     Listen for theme changes and run the given script.
-    The new theme, either "dark" or "light" is passed as the last argument to the script.
+    The new theme, either "str-dark" or "str-light" is passed as the last argument to the script.
 
     \(program_name) base16 --root <base16-root> --light <light-theme> --dark <dark-theme>
     Listen for theme changes and change to the base16 theme accordingly
@@ -155,10 +155,14 @@ func main() {
             case "toogle":
                 DarkMode.toogle()
             case "listen":
-                if args.count >= 3 {
-                    DarkMode.listen_with_shell(Array(args.suffix(from: 2)))
+                if args.count >= 5 {
+                    DarkMode.listen_with_shell(
+                        Array(args.suffix(from: 6)),
+                        light: find_option("--light"),
+                        dark: find_option("--dark")
+                    )
                 } else {
-                    fail_with_help("Provide a hook to run on theme changes.")
+                    fail_with_help("Provide a hook and theme strings to run on theme changes.")
                 }
             case "base16":
                 DarkMode.listen_with_base16(
